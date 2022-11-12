@@ -182,7 +182,7 @@
                 <img style="width: 75px; height: 75px" src="images/<%= cart[i].image %> ">
                 <div>
                   <p><%= cart[i].name %> </p>
-                  <% if (cart[i].sale_price!=null) { %>
+                  <% if (cart[i].sale_price) { %>
                     <small><span>$</span><%= cart[i].sale_price  %> </small>
                   <% } else { %>
                    
@@ -209,7 +209,7 @@
             </td>
 
             <td>
-              <% if (cart[i].sale_price!=null) { %>
+              <% if (cart[i].sale_price) { %>
                 <span class="product-price">$ <%= cart[i].sale_price * cart[i].quantity %> </span>
               <% } else { %>
                
