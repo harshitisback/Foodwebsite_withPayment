@@ -183,7 +183,7 @@
                 <div>
                   <p><%= cart[i].name %> </p>
                   <% if (cart[i].sale_price) { %>
-                    <small><span>$</span><%= cart[i].sale_price  %> </small>
+                    <small><span>$</span><%= cart[i].sale_price %> </small>
                   <% } else { %>
                    
                   <small><span>$</span><%= cart[i].price  %> </small>
@@ -199,10 +199,12 @@
             </td>
 
             <td>
-              <form>
+              <form method="post" action="/edit_product_quantity">
+
+                <input type="hidden" value="<%= cart[i].id %> " name="id">
                  <input type="submit" value="-" class="edit-btn " name="decrease_product_quantity_btn">
       
-                <input type="text" name="quantity" value="1" readonly="">
+                <input type="text" name="quantity" value=" <%= cart[i].quantity %> " readonly="">
 
                 <input type="submit" value="+" class="edit-btn" name="increase_product_quantity_btn">
               </form>
@@ -243,7 +245,7 @@
 
     <div class="checkout-container">
      
-      <form>
+      <form method="get" action="/checkout">
         <input type="submit" class="btn checkout-btn" value="Checkout" name="">
       </form>
     
@@ -300,7 +302,7 @@
         <div class="col-md-4 footer-col">
           <div class="footer_detail">
             <a href="" class="footer-logo">
-              calmandcode
+              WellFood
             </a>
             <p>
               Necessary, making this the first true generator on the Internet. It uses a dictionary of over 200 Latin words, combined with
