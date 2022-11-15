@@ -108,22 +108,16 @@ app.get("/cart", function (req, res) {
 })
 
 app.post("/remove_product", function (req, res) {
-    var id = req.body.removebtn;
+    var id = req.body.id;
     var cart = req.session.cart;
-
-    let temp = [];
-
-    for (let i = 0; i < cart.length; i++) {
-
-        if (cart[i].id === id) {
-            continue;
-        } else {
-            temp.push(cart[i]);
-        }
-
+ 
+    for(let i=0; i<cart.length; i++){
+       if(cart[i].id == id){
+          cart.splice(cart.indexOf(i),1);
+       }
     }
 
-    cart = temp;
+  
     calculateTotal(cart, req);
 
     res.redirect('/cart');
@@ -190,6 +184,9 @@ app.post('/place_order', function (req, res) {
     var cost = req.session.total;
     var status = "not paid";
     var date = new Date();
+    var products_ids="";
+    var id = Date.now();
+    req.session.order_id = id;
 
     
 
@@ -201,15 +198,28 @@ app.post('/place_order', function (req, res) {
         database: "foodsite"
     });
 
+    var cart = req.session.cart;
+    for(let i=0; i<cart.length; i++){
+       products_ids = products_ids + "," +cart[i].id;
+    }
+
     con.connect(function (err) {
         if (err) throw err;
         console.log("Connected!");
-        var sql = "INSERT INTO orders (cost,name,email,status,city,address,phone,date) VALUES ?";
+        var sql = "INSERT INTO orders (id,cost,name,email,status,city,address,phone,date,products_ids) VALUES ?";
         var values = [
-            [cost, name,email,status, city,address, phone, date]
+            [id,cost, name,email,status, city,address, phone, date, products_ids]
             ];
         con.query(sql, [values], function (err, result) {
+
             if (err) throw err;
+            for(let i=0;i<cart.length;i++){
+                var query = "INSERT INTO order_items (order_id,product_id,product_name,product_price,product_image,product_quantity,order_date) VALUES ?";
+                var values = [
+                   [id,cart[i].id,cart[i].name,cart[i].price,cart[i].image,cart[i].quantity,new Date()]
+                ];
+                con.query(query,[values],(err,result)=>{})
+             }
             res.redirect('/payment');
         });
     });
@@ -217,8 +227,74 @@ app.post('/place_order', function (req, res) {
 })
 
 app.get('/payment', function (req, res) {
-    res.render('pages/payment')
+    var total = req.session.total;
+    res.render('pages/payment', {total:total})
 })
+
+app.get("/verify_payment",function(req,res){
+    var transaction_id = req.query.transaction_id;
+    var order_id = req.session.order_id;
+ 
+    var con =  mysql.createConnection({
+       host:"localhost",
+       user:"root",
+       password:"",
+       database:"foodsite"
+    })
+    
+ 
+    con.connect((err)=>{
+             if(err){
+                console.log(err);
+             }else{
+                var query = "INSERT INTO payments (order_id,transaction_id,date) VALUES ?";
+                var values = [
+                   [order_id,transaction_id,new Date()]
+                ]
+                con.query(query,[values],(err,result)=>{
+                   
+                   con.query("UPDATE orders SET status='paid' WHERE id='"+order_id+"'",(err,result)=>{})
+                   res.redirect('/thank_you')
+                
+                })
+             }  
+       })   
+    
+ })
+
+
+ app.get("/thank_you",function(req,res){
+
+    var order_id = req.session.order_id;
+    res.render("pages/thank_you",{order_id:order_id})
+ })
+
+
+ app.get('/single_product',function(req,res){
+
+    var id = req.query.id;
+ 
+    var con = mysql.createConnection({
+       host:"localhost",
+       user:"root",
+       password:"",
+       database:"foodsite"
+    })
+ 
+    con.query("SELECT * FROM products WHERE id='"+id+"'",(err,result)=>{
+       res.render('pages/single_product',{result:result});
+    })
+ 
+ 
+ 
+ });
+
+
+ app.get('/about',function(req,res){
+   
+    res.render('pages/about');
+ });
+
 
 app.listen(3000, function () {
     console.log("server started at port 3000");
